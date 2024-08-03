@@ -1,3 +1,4 @@
+use clap::{Arg, Command};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -97,7 +98,19 @@ enum FontAnalysisError {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = Path::new("./examples/test.ttf");
+    let matches = Command::new("Font Analyzer")
+        .version("1.0")
+        .author("Your Name")
+        .about("Analyzes TTF and OTF font files")
+        .arg(
+            Arg::new("FILE")
+                .help("The font file to analyze")
+                .required(true)
+                .index(1),
+        )
+        .get_matches();
+
+    let path = Path::new(matches.get_one::<String>("FILE").unwrap());
     let analyzer = FontAnalyzer::new(path)?;
 
     match analyzer.analyze() {
