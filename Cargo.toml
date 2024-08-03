@@ -1,6 +1,11 @@
 [package]
-name = "fc-info-rs"
+name = "fc-info"
 version = "0.1.0"
+authors = ["Lukas.J Han <lukas.j.han@gmail.com>"]
+description = "A CLI tool for analyzing TTF and OTF font files"
+license = "MIT"
+repository = "https://github.com/lukasjhan/fc-info-rs"
+
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
