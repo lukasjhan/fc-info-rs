@@ -162,3 +162,106 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+// ... (기존 코드는 그대로 유지)
+
+#[cfg(test)]
+mod tests {
+    use crate::FontAnalyzer; // crate:: 접두사 사용
+    use std::path::Path;
+
+    #[test]
+    fn test_ttf_font_analysis() {
+        let path = Path::new("./examples/test.ttf");
+        let analyzer = FontAnalyzer::new(&path).unwrap();
+        let info = analyzer.analyze().unwrap();
+
+        assert_eq!(
+            info.family_names,
+            vec![
+                "VITRO CORE TTF (English, United States)".to_string(),
+                "비트로 코어 TTF (Korean, Korea)".to_string()
+            ]
+        );
+        assert_eq!(info.post_script_name, Some("VITRO-CORE-TTF".to_string()));
+        assert_eq!(info.units_per_em, 1000);
+        assert_eq!(info.ascender, 976);
+        assert_eq!(info.descender, -353);
+        assert_eq!(info.line_gap, 0);
+        assert_eq!(info.number_of_glyphs, 3694);
+        assert_eq!(info.x_height, Some(540));
+        assert_eq!(info.is_regular, true);
+        assert_eq!(info.is_italic, false);
+        assert_eq!(info.is_bold, false);
+        assert_eq!(info.is_oblique, false);
+        assert_eq!(info.is_variable, false);
+
+        assert_eq!(info.global_bounding_box.x_min, -26);
+        assert_eq!(info.global_bounding_box.y_min, -468);
+        assert_eq!(info.global_bounding_box.x_max, 10077);
+        assert_eq!(info.global_bounding_box.y_max, 976);
+
+        if let Some(ul) = info.underline_metrics {
+            assert_eq!(ul.position, -190);
+            assert_eq!(ul.thickness, 55);
+        } else {
+            panic!("Underline metrics should be Some");
+        }
+
+        // Weight and Width assertions
+        assert_eq!(info.weight, ttf_parser::Weight::Black); // Assuming Black weight is 900
+        assert_eq!(info.width, ttf_parser::Width::Normal); // Assuming Normal width is 5
+
+        if let Some(st) = info.strikeout_metrics {
+            assert_eq!(st.position, 250);
+            assert_eq!(st.thickness, 50);
+        } else {
+            panic!("Strikeout metrics should be Some");
+        }
+
+        if let Some(sub) = info.subscript_metrics {
+            assert_eq!(sub.x_size, 700);
+            assert_eq!(sub.y_size, 650);
+            assert_eq!(sub.x_offset, 0);
+            assert_eq!(sub.y_offset, 140);
+        } else {
+            panic!("Subscript metrics should be Some");
+        }
+
+        if let Some(sup) = info.superscript_metrics {
+            assert_eq!(sup.x_size, 700);
+            assert_eq!(sup.y_size, 650);
+            assert_eq!(sup.x_offset, 0);
+            assert_eq!(sup.y_offset, 477);
+        } else {
+            panic!("Superscript metrics should be Some");
+        }
+    }
+
+    #[test]
+    fn test_otf_font_analysis() {
+        let path = Path::new("./examples/test.otf");
+        let analyzer = FontAnalyzer::new(&path).unwrap();
+        let info = analyzer.analyze().unwrap();
+
+        assert_eq!(
+            info.family_names,
+            vec![
+                "VITRO CORE OTF (English, United States)".to_string(),
+                "비트로 코어 OTF (Korean, Korea)".to_string()
+            ]
+        );
+        assert_eq!(info.post_script_name, Some("VITRO-CORE-OTF".to_string()));
+        assert_eq!(info.units_per_em, 1000);
+        assert_eq!(info.ascender, 976);
+        assert_eq!(info.descender, -353);
+        assert_eq!(info.line_gap, 0);
+        assert_eq!(info.number_of_glyphs, 3692);
+        assert_eq!(info.x_height, Some(540));
+        assert_eq!(info.is_regular, true);
+        assert_eq!(info.is_italic, false);
+        assert_eq!(info.is_bold, false);
+        assert_eq!(info.is_oblique, false);
+        assert_eq!(info.is_variable, false);
+    }
+}
