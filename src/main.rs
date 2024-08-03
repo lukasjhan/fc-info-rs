@@ -1,4 +1,5 @@
 use clap::{Arg, Command};
+use serde::Serialize;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -61,13 +62,13 @@ impl FontAnalyzer {
             strikeout_metrics: face.strikeout_metrics(),
             subscript_metrics: face.subscript_metrics(),
             superscript_metrics: face.superscript_metrics(),
-            permissions: face.permissions().unwrap(),
+            permissions: face.permissions(),
             is_variable: face.is_variable(),
         })
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct FontInfo {
     family_names: Vec<String>,
     post_script_name: Option<String>,
@@ -75,20 +76,28 @@ struct FontInfo {
     ascender: i16,
     descender: i16,
     line_gap: i16,
+    #[serde(skip_serializing)]
     global_bounding_box: ttf_parser::Rect,
     number_of_glyphs: u16,
+    #[serde(skip_serializing)]
     underline_metrics: Option<ttf_parser::LineMetrics>,
     x_height: Option<i16>,
+    #[serde(skip_serializing)]
     weight: ttf_parser::Weight,
+    #[serde(skip_serializing)]
     width: ttf_parser::Width,
     is_regular: bool,
     is_italic: bool,
     is_bold: bool,
     is_oblique: bool,
+    #[serde(skip_serializing)]
     strikeout_metrics: Option<ttf_parser::LineMetrics>,
+    #[serde(skip_serializing)]
     subscript_metrics: Option<ttf_parser::ScriptMetrics>,
+    #[serde(skip_serializing)]
     superscript_metrics: Option<ttf_parser::ScriptMetrics>,
-    permissions: ttf_parser::Permissions,
+    #[serde(skip_serializing)]
+    permissions: Option<ttf_parser::Permissions>,
     is_variable: bool,
 }
 
@@ -108,6 +117,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .required(true)
                 .index(1),
         )
+        .arg(
+            Arg::new("json")
+                .short('j')
+                .long("json")
+                .help("Output in JSON format")
+                .action(clap::ArgAction::SetTrue),
+        )
         .get_matches();
 
     let path = Path::new(matches.get_one::<String>("FILE").unwrap());
@@ -115,27 +131,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match analyzer.analyze() {
         Ok(info) => {
-            println!("Family names: {:?}", info.family_names);
-            println!("PostScript name: {:?}", info.post_script_name);
-            println!("Units per EM: {:?}", info.units_per_em);
-            println!("Ascender: {}", info.ascender);
-            println!("Descender: {}", info.descender);
-            println!("Line gap: {}", info.line_gap);
-            println!("Global bbox: {:?}", info.global_bounding_box);
-            println!("Number of glyphs: {}", info.number_of_glyphs);
-            println!("Underline: {:?}", info.underline_metrics);
-            println!("X height: {:?}", info.x_height);
-            println!("Weight: {:?}", info.weight);
-            println!("Width: {:?}", info.width);
-            println!("Regular: {}", info.is_regular);
-            println!("Italic: {}", info.is_italic);
-            println!("Bold: {}", info.is_bold);
-            println!("Oblique: {}", info.is_oblique);
-            println!("Strikeout: {:?}", info.strikeout_metrics);
-            println!("Subscript: {:?}", info.subscript_metrics);
-            println!("Superscript: {:?}", info.superscript_metrics);
-            println!("Permissions: {:?}", info.permissions);
-            println!("Variable: {:?}", info.is_variable);
+            if matches.get_flag("json") {
+                println!("{}", serde_json::to_string_pretty(&info)?);
+            } else {
+                println!("Family names: {:?}", info.family_names);
+                println!("PostScript name: {:?}", info.post_script_name);
+                println!("Units per EM: {:?}", info.units_per_em);
+                println!("Ascender: {}", info.ascender);
+                println!("Descender: {}", info.descender);
+                println!("Line gap: {}", info.line_gap);
+                println!("Global bbox: {:?}", info.global_bounding_box);
+                println!("Number of glyphs: {}", info.number_of_glyphs);
+                println!("Underline: {:?}", info.underline_metrics);
+                println!("X height: {:?}", info.x_height);
+                println!("Weight: {:?}", info.weight);
+                println!("Width: {:?}", info.width);
+                println!("Regular: {}", info.is_regular);
+                println!("Italic: {}", info.is_italic);
+                println!("Bold: {}", info.is_bold);
+                println!("Oblique: {}", info.is_oblique);
+                println!("Strikeout: {:?}", info.strikeout_metrics);
+                println!("Subscript: {:?}", info.subscript_metrics);
+                println!("Superscript: {:?}", info.superscript_metrics);
+                println!("Permissions: {:?}", info.permissions);
+                println!("Variable: {:?}", info.is_variable);
+            }
         }
         Err(e) => println!("Analysis failed: {:?}", e),
     }
