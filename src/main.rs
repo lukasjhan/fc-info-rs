@@ -3,7 +3,6 @@ use serde::Serialize;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use ttf_parser;
 
 struct FontAnalyzer {
     data: Vec<u8>,
